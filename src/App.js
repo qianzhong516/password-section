@@ -1,13 +1,8 @@
+import 'remixicon/fonts/remixicon.css'
 import PasswordInput from "./PasswordInput";
+import { TickIcon } from "./TickIcon";
+import { Button } from "./Button";
 import { useState } from 'react';
-
-const Checklist = ({ input, validationRules }) => {
-  return <ul className=''>
-    {validationRules.map((item, i) =>
-      <li key={i}>{item.validate(input) ? 'Y ' : 'N '}{item.label}</li>
-    )}
-  </ul>
-}
 
 const validationRules = [
   { label: '8 - 64 characters', validate: (input) => input.length >= 8 && input.length <= 64 },
@@ -17,14 +12,23 @@ const validationRules = [
   { label: 'One special character (e.g..! @ # $ % ^ & *)', validate: (input) => /[,.`!@#$%%^&*]/.test(input) },
 ]
 
+const Checklist = ({ input, validationRules }) => {
+  return <ul className='flex flex-col gap-1'>
+    {validationRules.map((item, i) =>
+      <li key={i} className='flex gap-2 items-center text-sm text-neutral-500'><TickIcon isActive={item.validate(input)} />{item.label}</li>
+    )}
+  </ul>
+}
+
 function App() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [repeatedPassword, setRepeatedPassword] = useState('');
   const [errors, setErrors] = useState([]);
 
   const onSaveChanges = (e) => {
     e.preventDefault();
-    const errors = validationRules.filter(rule => !rule.validate(newPassword)).map(({ label }) => `The new password has to have ${label.toLowerCase()}`);
+    const errors = validationRules.filter(rule => !rule.validate(newPassword)).map(({ label }) => `The new password must have ${label.toLowerCase()}`);
     setErrors(errors);
   }
 
@@ -36,16 +40,30 @@ function App() {
       </div>
 
       <form className="flex flex-col gap-4">
-        <PasswordInput label='Current password' placeholder='Enter your current password' value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-        <PasswordInput label='New password' placeholder='Enter your new password' value={newPassword} onChange={(e) => {
-          setNewPassword(e.target.value);
-          setErrors([]);
-        }} />
+        <PasswordInput
+          label='Current password'
+          placeholder='Enter your current password'
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)} />
+        <PasswordInput
+          label='New password'
+          placeholder='Enter your new password'
+          value={newPassword}
+          onChange={(e) => {
+            setNewPassword(e.target.value);
+            setErrors([]);
+          }} />
         <Checklist input={newPassword} validationRules={validationRules} />
-        <ul className='text-red-400'>
+        {errors.length > 0 && <ul className='text-red-400 text-sm'>
           {errors.map((err, i) => <li key={i}>{err}</li>)}
-        </ul>
-        <input type="button" value="Save Changes" onClick={onSaveChanges} />
+        </ul>}
+        <PasswordInput
+          label='Confirm new password'
+          placeholder='Repeat your new password'
+          value={repeatedPassword}
+          onChange={(e) => setRepeatedPassword(e.target.value)}
+          isValid={newPassword && newPassword === repeatedPassword} />
+        <Button onClick={onSaveChanges} >Save Changes</Button>
       </form>
     </div>
   );

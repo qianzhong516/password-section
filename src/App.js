@@ -4,6 +4,8 @@ import { TickIcon } from "./TickIcon";
 import { Button } from "./Button";
 import { useRef, useState } from 'react';
 
+const DEFAULT_PASSWORD = '$uPah4ckr';
+
 const validationRules = [
   { label: '8 - 64 characters', validate: (input) => input.length >= 8 && input.length <= 64 },
   { label: 'One uppercase letter', validate: (input) => /[A-Z]/.test(input) },
@@ -21,7 +23,7 @@ const Checklist = ({ input, validationRules }) => {
 }
 
 function App() {
-  const [currentPassword, setCurrentPassword] = useState('$uPah4ckr');
+  const [currentPassword, setCurrentPassword] = useState(DEFAULT_PASSWORD);
   const [newPassword, setNewPassword] = useState('');
   const [repeatedPassword, setRepeatedPassword] = useState('');
   const [errors, setErrors] = useState([]);
@@ -33,7 +35,7 @@ function App() {
   const newPasswordIsInvalid = newPassword !== repeatedPassword && repeatedPassword;
 
   const resetForm = () => {
-    setCurrentPassword('');
+    setCurrentPassword(DEFAULT_PASSWORD);
     setNewPassword('');
     setRepeatedPassword('');
   }
@@ -84,15 +86,18 @@ function App() {
           {errors.map((err, i) => <li key={i}>{err}</li>)}
         </ul>}
         <form className="flex flex-col gap-4" onSubmit={onSaveChanges}>
+          <input type='text' name='username' autoComplete='username' defaultValue='jane.doe@gmail.com' hidden />
           <PasswordInput
             required={true}
             label='Current password'
             placeholder='Enter your current password'
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            ref={currentPasswordRef} />
+            ref={currentPasswordRef}
+            autoComplete='current-password' />
           <PasswordInput
             required={true}
+            name='new-password'
             label='New password'
             placeholder='Enter your new password'
             value={newPassword}
@@ -100,17 +105,20 @@ function App() {
               setNewPassword(e.target.value);
               setErrors([]);
             }}
-            ref={newPasswordRef} />
+            ref={newPasswordRef}
+            autoComplete='new-password' />
           <Checklist input={newPassword} validationRules={validationRules} />
           <div>
             <PasswordInput
               required={true}
+              name='repeated-password'
               label='Confirm new password'
               placeholder='Repeat your new password'
               value={repeatedPassword}
               onChange={(e) => setRepeatedPassword(e.target.value)}
               isValid={newPassword && newPassword === repeatedPassword}
-              ref={repeatedPasswordRef} />
+              ref={repeatedPasswordRef}
+              autoComplete='new-password' />
             {newPasswordIsInvalid && <p className='text-sm text-red-400'>Not matched with the new password</p>}
           </div>
           <Button disabled={newPasswordIsInvalid}>Save Changes</Button>

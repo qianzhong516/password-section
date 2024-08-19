@@ -11,6 +11,7 @@ const PasswordInput = forwardRef(({
     onChange,
     isValid,
     required,
+    ...props
 }, ref) => {
     const id = useId();
     const [isMasked, setIsMasked] = useState(true);
@@ -49,6 +50,7 @@ const PasswordInput = forwardRef(({
                     required={required}
                     ref={inputRef}
                     onBlur={handleOnBlur}
+                    {...props}
                 />
                 <div className='absolute top-2 right-2' onClick={toggleMaskPassword} >
                     <div className='flex gap-2 items-center'>

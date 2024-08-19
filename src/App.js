@@ -21,7 +21,7 @@ const Checklist = ({ input, validationRules }) => {
 }
 
 function App() {
-  const [currentPassword, setCurrentPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('$uPah4ckr');
   const [newPassword, setNewPassword] = useState('');
   const [repeatedPassword, setRepeatedPassword] = useState('');
   const [errors, setErrors] = useState([]);
@@ -84,17 +84,13 @@ function App() {
           {errors.map((err, i) => <li key={i}>{err}</li>)}
         </ul>}
         <form className="flex flex-col gap-4" onSubmit={onSaveChanges}>
-          <div>
-            <PasswordInput
-              required={true}
-              label='Current password'
-              placeholder='Enter your current password'
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              ref={currentPasswordRef} />
-            <p className='text-xs'>Correct passowrd: $uPah4ckr</p>
-          </div>
-
+          <PasswordInput
+            required={true}
+            label='Current password'
+            placeholder='Enter your current password'
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            ref={currentPasswordRef} />
           <PasswordInput
             required={true}
             label='New password'

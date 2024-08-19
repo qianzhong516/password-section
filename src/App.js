@@ -2,7 +2,7 @@ import 'remixicon/fonts/remixicon.css'
 import PasswordInput from "./PasswordInput";
 import { TickIcon } from "./TickIcon";
 import { Button } from "./Button";
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 const validationRules = [
   { label: '8 - 64 characters', validate: (input) => input.length >= 8 && input.length <= 64 },
@@ -25,46 +25,101 @@ function App() {
   const [newPassword, setNewPassword] = useState('');
   const [repeatedPassword, setRepeatedPassword] = useState('');
   const [errors, setErrors] = useState([]);
+  const currentPasswordRef = useRef(null);
+  const newPasswordRef = useRef(null);
+  const repeatedPasswordRef = useRef(null);
 
-  const onSaveChanges = (e) => {
+  const validationErrors = validationRules.filter(rule => !rule.validate(newPassword));
+  const newPasswordIsInvalid = newPassword !== repeatedPassword && repeatedPassword;
+
+  const resetForm = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setRepeatedPassword('');
+  }
+
+  const onSaveChanges = async (e) => {
     e.preventDefault();
-    const errors = validationRules.filter(rule => !rule.validate(newPassword)).map(({ label }) => `The new password must have ${label.toLowerCase()}`);
-    setErrors(errors);
+    setErrors([]);
+    let errors = [];
+
+    const res = await fetch('https://www.greatfrontend.com/api/projects/challenges/auth/change-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        'user_id': 1234,
+        password: currentPassword,
+        'new_password': newPassword
+      }),
+    }).then(data => data.json());
+
+    if (res.error === 'Current password is not correct.') {
+      errors.push('Sorry, the password that you have provided is incorrect.');
+      currentPasswordRef.current.focusOnError();
+    } else if (res.user && newPassword === currentPassword) {
+      errors.push('New password is the same as the current password.');
+      newPasswordRef.current.focusOnError();
+    } else if (validationErrors.length) {
+      errors.push(...validationErrors.map(({ label }) => `The new password should contain ${label.toLowerCase()}`));
+      newPasswordRef.current.focusOnError();
+    }
+
+    if (!errors.length) {
+      resetForm();
+    } else {
+      setErrors(errors);
+    }
   }
 
   return (
-    <div className='container max-w-lg flex flex-col gap-4'>
-      <div>
-        <h1 className='text-lg font-bold'>Manage Security</h1>
-        <p className="text-sm text-neutral-400">Protect your data and ensure secure interactions.</p>
-      </div>
-
-      <form className="flex flex-col gap-4">
-        <PasswordInput
-          label='Current password'
-          placeholder='Enter your current password'
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)} />
-        <PasswordInput
-          label='New password'
-          placeholder='Enter your new password'
-          value={newPassword}
-          onChange={(e) => {
-            setNewPassword(e.target.value);
-            setErrors([]);
-          }} />
-        <Checklist input={newPassword} validationRules={validationRules} />
+    <div className='container max-w-lg flex flex-col gap-4 h-svh justify-center -translate-y-[150px]'>
+      <div className='flex flex-col gap-4'>
+        <div>
+          <h1 className='text-lg font-bold'>Manage Security</h1>
+          <p className="text-sm text-neutral-400">Protect your data and ensure secure interactions.</p>
+        </div>
         {errors.length > 0 && <ul className='text-red-400 text-sm'>
           {errors.map((err, i) => <li key={i}>{err}</li>)}
         </ul>}
-        <PasswordInput
-          label='Confirm new password'
-          placeholder='Repeat your new password'
-          value={repeatedPassword}
-          onChange={(e) => setRepeatedPassword(e.target.value)}
-          isValid={newPassword && newPassword === repeatedPassword} />
-        <Button onClick={onSaveChanges} >Save Changes</Button>
-      </form>
+        <form className="flex flex-col gap-4" onSubmit={onSaveChanges}>
+          <div>
+            <PasswordInput
+              required={true}
+              label='Current password'
+              placeholder='Enter your current password'
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              ref={currentPasswordRef} />
+            <p className='text-xs'>Correct passowrd: $uPah4ckr</p>
+          </div>
+
+          <PasswordInput
+            required={true}
+            label='New password'
+            placeholder='Enter your new password'
+            value={newPassword}
+            onChange={(e) => {
+              setNewPassword(e.target.value);
+              setErrors([]);
+            }}
+            ref={newPasswordRef} />
+          <Checklist input={newPassword} validationRules={validationRules} />
+          <div>
+            <PasswordInput
+              required={true}
+              label='Confirm new password'
+              placeholder='Repeat your new password'
+              value={repeatedPassword}
+              onChange={(e) => setRepeatedPassword(e.target.value)}
+              isValid={newPassword && newPassword === repeatedPassword}
+              ref={repeatedPasswordRef} />
+            {newPasswordIsInvalid && <p className='text-sm text-red-400'>Not matched with the new password</p>}
+          </div>
+          <Button disabled={newPasswordIsInvalid}>Save Changes</Button>
+        </form>
+      </div>
     </div>
   );
 }
